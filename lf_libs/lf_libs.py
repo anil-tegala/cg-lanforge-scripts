@@ -81,9 +81,9 @@ class lf_libs:
     max_6g_stations = None
     max_ax_stations = None
     max_ac_stations = None
-    twog_prefix = "ath10k_2g0"
-    fiveg_prefix = "ath10k_5g0"
-    sixg_prefix = "sixg_0"
+    twog_prefix = "wlan_2g"
+    fiveg_prefix = "wlan_5g"
+    sixg_prefix = "wlan_6g"
     ax_prefix = "AX200_0"
     pcap_obj = None
     """
@@ -878,7 +878,7 @@ class lf_libs:
         '''This method for scan ssid data'''
         count = 0
         sta_list = []
-        sta_name = str(radio.split(".")[0]) + "." + str(radio.split(".")[1]) + "." + "sta00100"
+        sta_name = str(radio.split(".")[0]) + "." + str(radio.split(".")[1]) + "." + "sta_scan000"
         sta_list.append(sta_name)
         logging.info("scan station: " + str(sta_list))
         for i in range(retry + 1):
