@@ -94,7 +94,7 @@ class lf_tests(lf_libs):
         data = self.setup_interfaces(ssid=ssid, bssid=bssid, passkey=passkey, encryption=security,
                                      band=band, vlan_id=vlan_id, mode=mode, num_sta=num_sta, dut_data_=dut_data)
         logging.info("Setup interface data:\n" + json.dumps(str(data), indent=2))
-        allure.attach(name="Interface Info: \n", body=json.dumps(str(data), indent=2),
+        allure.attach(name="Setup Interface Data: \n", body=json.dumps(str(data), indent=2),
                       attachment_type=allure.attachment_type.JSON)
         if data == {}:
             pytest.skip("Skipping This Test")
@@ -343,7 +343,7 @@ class lf_tests(lf_libs):
                                      band=band, vlan_id=vlan_id, mode=mode, num_sta=num_sta, dut_data_=dut_data)
 
         logging.info("Setup interface data:\n" + json.dumps(str(data), indent=2))
-        allure.attach(name="Interface Info: \n", body=json.dumps(str(data), indent=2),
+        allure.attach(name="Setup Interface Data: \n", body=json.dumps(str(data), indent=2),
                       attachment_type=allure.attachment_type.JSON)
         if data == {}:
             pytest.skip("Skipping This Test")
@@ -744,47 +744,47 @@ class lf_tests(lf_libs):
                                      band=band, vlan_id=vlan_id, mode=mode, num_sta=num_sta, dut_data_=dut_data)
 
         logging.info("Setup interface data:\n" + json.dumps(str(data), indent=2))
-        allure.attach(name="Interface Info: \n", body=json.dumps(str(data), indent=2),
+        allure.attach(name="Setup Interface Data: \n", body=json.dumps(str(data), indent=2),
                       attachment_type=allure.attachment_type.JSON)
         if data == {}:
             pytest.skip("Skipping This Test")
         client_connect_obj = []
         station_data_all = {}
-        start_sniffer = False
+        # start_sniffer = False
         for radio in data[identifier]["station_data"]:
-            if band == "twog":
-                if dict(dut_data.get(identifier)["radio_data"]).keys().__contains__("2G") and \
-                        dict(dut_data.get(identifier)["radio_data"])["2G"] is not None:
-                    sniffer_channel = dict(dut_data.get(identifier)["radio_data"])["2G"]["channel"]
-                    if data[identifier]["sniff_radio_2g"] is not None and sniffer_channel is not None:
-                        start_sniffer = True
-                        self.start_sniffer(radio_channel=sniffer_channel,
-                                           test_name=f'{data[identifier]["station_data"][radio][0]}',
-                                           radio=data[identifier]["sniff_radio_2g"],
-                                           duration=120)
-                    logging.info("started-sniffer")
-            if band == "fiveg":
-                if dict(dut_data.get(identifier)["radio_data"]).keys().__contains__("5G") and \
-                        dict(dut_data.get(identifier)["radio_data"])["5G"] is not None:
-                    sniffer_channel = dict(dut_data.get(identifier)["radio_data"])["5G"]["channel"]
-                    if data[identifier]["sniff_radio_5g"] is not None and sniffer_channel is not None:
-                        start_sniffer = True
-                        self.start_sniffer(radio_channel=sniffer_channel,
-                                           radio=data[identifier]["sniff_radio_5g"],
-                                           duration=120)
-                    logging.info("started-sniffer")
-            if band == "sixg":
-                if dict(dut_data.get(identifier)["radio_data"]).keys().__contains__("6G") and \
-                        dict(dut_data.get(identifier)["radio_data"])["6G"] is not None:
-                    sniffer_channel = self.lf_sixg_lookup_validation(
-                        int(dict(dut_data.get(identifier)["radio_data"])["6G"]["channel"]))
-                    logging.info("LF sixg channel: " + str(sniffer_channel))
-                    if data[identifier]["sniff_radio_6g"] is not None and sniffer_channel is not None:
-                        start_sniffer = True
-                        self.start_sniffer(radio_channel=sniffer_channel,
-                                           radio=data[identifier]["sniff_radio_6g"],
-                                           duration=120)
-                    logging.info("started-sniffer")
+            # if band == "twog":
+            #     if dict(dut_data.get(identifier)["radio_data"]).keys().__contains__("2G") and \
+            #             dict(dut_data.get(identifier)["radio_data"])["2G"] is not None:
+            #         sniffer_channel = dict(dut_data.get(identifier)["radio_data"])["2G"]["channel"]
+            #         if data[identifier]["sniff_radio_2g"] is not None and sniffer_channel is not None:
+            #             start_sniffer = True
+            #             self.start_sniffer(radio_channel=sniffer_channel,
+            #                                test_name=f'{data[identifier]["station_data"][radio][0]}',
+            #                                radio=data[identifier]["sniff_radio_2g"],
+            #                                duration=120)
+            #         logging.info("started-sniffer")
+            # if band == "fiveg":
+            #     if dict(dut_data.get(identifier)["radio_data"]).keys().__contains__("5G") and \
+            #             dict(dut_data.get(identifier)["radio_data"])["5G"] is not None:
+            #         sniffer_channel = dict(dut_data.get(identifier)["radio_data"])["5G"]["channel"]
+            #         if data[identifier]["sniff_radio_5g"] is not None and sniffer_channel is not None:
+            #             start_sniffer = True
+            #             self.start_sniffer(radio_channel=sniffer_channel,
+            #                                radio=data[identifier]["sniff_radio_5g"],
+            #                                duration=120)
+            #         logging.info("started-sniffer")
+            # if band == "sixg":
+            #     if dict(dut_data.get(identifier)["radio_data"]).keys().__contains__("6G") and \
+            #             dict(dut_data.get(identifier)["radio_data"])["6G"] is not None:
+            #         sniffer_channel = self.lf_sixg_lookup_validation(
+            #             int(dict(dut_data.get(identifier)["radio_data"])["6G"]["channel"]))
+            #         logging.info("LF sixg channel: " + str(sniffer_channel))
+            #         if data[identifier]["sniff_radio_6g"] is not None and sniffer_channel is not None:
+            #             start_sniffer = True
+            #             self.start_sniffer(radio_channel=sniffer_channel,
+            #                                radio=data[identifier]["sniff_radio_6g"],
+            #                                duration=120)
+            #         logging.info("started-sniffer")
             client_connect = CreateStation(_host=self.manager_ip, _port=self.manager_http_port,
                                            _sta_list=data[identifier]["station_data"][radio],
                                            _password=data[identifier]["passkey"],
@@ -826,14 +826,14 @@ class lf_tests(lf_libs):
                 self.attach_table_allure(data=sta_table_dict, allure_name=allure_name)
 
         # stop sniffer if active
-        logging.info(msg=str("Cleaning up sniffer interface If available on PORT Manager"))
+        # logging.info(msg=str("Cleaning up sniffer interface If available on PORT Manager"))
         port_data = self.json_get(_req_url="/port?fields=alias,parent+dev,port+type,ip,mac")['interfaces']
         # for i in port_data:
         #     for item in i:
         #         if i[item]['port type'] == '802.1Q VLAN' and i[item]['ip'] == '0.0.0.0':
         #             logging.info('VLAN do not have IP')
-        if start_sniffer:
-            self.stop_sniffer()
+        # if start_sniffer:
+        #     self.stop_sniffer()
 
         logging.info("pass_fail result: " + str(pass_fail))
         if False in pass_fail:
