@@ -1453,12 +1453,10 @@ class lf_tests(lf_libs):
 
     def dataplane_throughput_test(self, ssid="[BLANK]", passkey="[BLANK]", security="wpa2", num_sta=1, mode="BRIDGE",
                                   vlan_id=[None],
-                                  download_rate="85%", band="twog", scan_ssid=True,
-                                  upload_rate="0", duration="15s", instance_name="test_demo", raw_lines=None,
+                                  download_rate="100%", band="twog", scan_ssid=True,
+                                  upload_rate="0kbps", duration="15s", instance_name="test_dataplane", raw_lines=None,
                                   influx_tags="",
                                   move_to_influx=False,
-                                  station_data=["4way time (us)", "channel", "cx time (us)", "dhcp (ms)", "ip",
-                                                "signal", "mode"],
                                   allure_attach=True, allure_name="station data", client_type=0, dut_data={}):
         instance_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
         dataplane_obj_list = []
@@ -1486,7 +1484,6 @@ class lf_tests(lf_libs):
             logging.info("Upstream data: " + str(upstream_port))
             station_data = self.client_connect(ssid=ssid, passkey=passkey, security=security, mode=mode, band=band,
                                                vlan_id=vlan_id, num_sta=num_sta, scan_ssid=scan_ssid,
-                                               station_data=station_data,
                                                allure_attach=allure_attach, identifier=identifier,
                                                allure_name=allure_name, client_type=client_type, dut_data=dut_data)
 
@@ -1495,7 +1492,16 @@ class lf_tests(lf_libs):
                              ['traffic_types: UDP;TCP'],
                              ["show_3s: 1"], ["show_ll_graphs: 1"], ["show_log: 1"]]
             sets = [['Maximize Unused Attenuators', '0']]
-
+            if client_type != 0:
+                if client_type == 14:
+                    modes = "802.11an-AX"
+                if client_type == 9:
+                    modes = "802.11an-AC"
+                if client_type == 13:
+                    modes = "802.11bgn-AX"
+                if client_type == 11:
+                    modes = "802.11bgn-AC"
+                raw_lines.append([f'modes:{modes}'])
             dataplane_obj = DataplaneTest(lf_host=self.manager_ip,
                                           lf_port=self.manager_http_port,
                                           ssh_port=self.manager_ssh_port,
@@ -1511,7 +1517,7 @@ class lf_tests(lf_libs):
                                           upload_speed=upload_rate,
                                           duration=duration,
                                           dut=identifier,
-                                          station=list(station_data.keys())[0],
+                                          station=list(station_data)[0],
                                           test_tag=influx_tags,
                                           sets=sets,
                                           raw_lines=raw_lines)

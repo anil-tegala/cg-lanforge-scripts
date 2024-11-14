@@ -127,7 +127,7 @@ class DataplaneTest(cv_test):
                  pull_report=False,
                  load_old_cfg=False,
                  upload_speed="0",
-                 download_speed="85%",
+                 download_speed="100%",
                  duration="15s",
                  station="1.1.sta01500",
                  dut="NA",
