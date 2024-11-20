@@ -1132,10 +1132,10 @@ class lf_tests(lf_libs):
             if actual_tht_up > up_rate:
                 pytest.fail(f"Expected Throughput should be less than {up_rate} Mbps")
 
-    def wifi_capacity(self, mode="BRIDGE", vlan_id=100, batch_size="1,5,10,20,40,64,128",
-                      instance_name="wct_instance", download_rate="1Gbps", influx_tags="",
+    def wifi_capacity(self, mode="BRIDGE", vlan_id=100, batch_size="1,5,10,20,40,64,128", band ="twog",
+                      instance_name="wct_instance", download_rate="1Gbps", influx_tags="",security="",passkey="[BLANK]",
                       upload_rate="1Gbps", protocol="TCP-IPv4", duration="60000", stations="", create_stations=False,
-                      sort="interleave", raw_lines=[], move_to_influx=False, dut_data={}, ssid_name=None,
+                      sort="interleave", raw_lines=[], move_to_influx=False, dut_data={}, ssid_name=None,client_type=0,
                       num_stations={}, add_stations=True, create_vlan=True, pass_fail_criteria=False):
         wificapacity_obj_list = []
         vlan_raw_lines = None
@@ -1166,129 +1166,9 @@ class lf_tests(lf_libs):
                     ret = self.get_wan_upstream_ports()
                     upstream_port = ret[identifier] + "." + str(vlan_id[0])
             logging.info("Upstream data: " + str(upstream_port))
-            sets = [["DUT_NAME", dut]]
-
-            if add_stations:
-                '''SINGLE WIFI CAPACITY using lf_wifi_capacity.py'''
-                self.temp_raw_lines = self.default_scenario_raw_lines.copy()
-                for band_ in num_stations:
-                    if band_ not in ["2G", "5G", "6G"]:
-                        logging.error("Band is missing")
-                        pytest.fail("band is missing")
-
-                    if not isinstance(num_stations[band_], int):
-                        if not num_stations[band_] == "max":
-                            logging.error("Number of stations are wrong")
-                            pytest.fail("Number of stations are wrong")
-                    if ssid_name is None:
-                        logging.error("ssid name is missing")
-                        pytest.fail("ssid name is missing")
-                    if self.run_lf:
-                        dut_data = self.run_lf_dut_data()
-                        for i in dut_data:
-                            if mode != dut_data[i]["mode"]:
-                                pytest.skip("Dut is not configured in mode: " + mode)
-                            else:
-                                for j in dut_data[i]["ssid_data"]:
-                                    if band_ == "2G":
-                                        temp_band = "twog"
-                                    elif band_ == "5G":
-                                        temp_band = "fiveg"
-                                    elif band_ == "6G":
-                                        temp_band = "sixg"
-                                    if temp_band == dut_data[i]["ssid_data"][j]["band"]:
-                                        ssid_name = dut_data[i]["ssid_data"][j]["ssid"]
-                    radio_data = self.add_stations(band=band_, num_stations=num_stations[band_], ssid_name=ssid_name,
-                                                   dut_data=dut_data,
-                                                   identifier=identifier)
-                    if vlan_raw_lines is not None:
-                        for i in vlan_raw_lines:
-                            self.temp_raw_lines.append(i)
-                    self.chamber_view(raw_lines="custom")
-                    if pass_fail_criteria:
-                        # Station data
-                        self.band_sta = list(num_stations.keys())[0]
-                        logging.info("band: " + str(self.band_sta))
-                        if num_stations[self.band_sta] == 1:
-                            logging.info("radio_data: " + str(radio_data))
-                            sta_radio = list(radio_data.keys())[0]
-                            logging.info("sta_radio: " + str(sta_radio))
-                            sta_radio = sta_radio.split(".")
-                            shelf = int(sta_radio[0])
-                            resource = int(sta_radio[1])
-                            radio_ = sta_radio[2]
-                            # finding radio number for sta name e.g. for wiphy2 the radio num is 2. Sta name will be wlan2
-                            radio_num = int(''.join(x for x in radio_ if x.isdigit()))
-                            logging.info("radio_num: " + str(radio_num))
-                            sta_name = f"{shelf}.{resource}.wlan{radio_num}"
-                            logging.info("sta_name: " + str(sta_name))
-                            self.local_realm.admin_up(sta_name)
-                            sta_ip = self.local_realm.wait_for_ip([sta_name], timeout_sec=120)
-                            sta_rows = ["4way time (us)", "channel", "ssid", "key/phrase", "cx time (us)", "dhcp (ms)",
-                                        "ip", "signal",
-                                        "mac", "mode"]
-                            if str(self.band_sta) != "6G":
-                                allure_attach = True
-                            else:
-                                allure_attach = False
-                            self.get_station_data(sta_name=[sta_name], rows=sta_rows,
-                                                  allure_attach=allure_attach)
-                            if sta_ip:
-                                logging.info("ip's acquired")
-                                self.sta_mode_ = \
-                                    self.json_get(f'/port/{shelf}/{resource}/wlan{radio_num}?fields=mode')['interface'][
-                                        'mode']
-                                logging.info("sta_mode:- " + str(self.sta_mode_))
-                            else:
-                                logging.info("Stations Failed to get IP's")
-                                pytest.fail("Stations Failed to get IP's")
-                            ssid = self.json_get(f'/port/{shelf}/{resource}/wlan{radio_num}?fields=ssid')['interface'][
-                                'ssid']
-                            logging.info("ssid:- " + str(ssid))
-                            passkey = \
-                                self.json_get(f'/port/{shelf}/{resource}/wlan{radio_num}?fields=key/phrase')[
-                                    'interface'][
-                                    'key/phrase']
-                            logging.info("passkey:- " + str(passkey))
-                            if "160" in self.sta_mode_ or str(self.band_sta) == "6G":
-                                self.client_disconnect(station_name=[sta_name])
-                                logging.info("DUT Data: " + str(dut_data))
-                                encryption_value = None
-                                # Finding sta security
-                                for ssid_info in dut_data[identifier]['ssid_data'].values():
-                                    if ssid_info['ssid'] == ssid:
-                                        encryption_value = ssid_info['encryption']
-                                        if encryption_value.lower() == "open":
-                                            security_ = "[BLANK]"
-                                        else:
-                                            security_ = encryption_value
-                                        break
-
-                                client_connect = CreateStation(_host=self.manager_ip, _port=self.manager_http_port,
-                                                               _sta_list=[sta_name],
-                                                               _password=passkey,
-                                                               _ssid=ssid,
-                                                               _security=security_)
-                                client_connect.station_profile.sta_mode = 0
-                                client_connect.station_profile.use_ht160 = True
-                                client_connect.upstream_resource = int(upstream_port.split(".")[1])
-                                client_connect.upstream_port = str(upstream_port.split(".")[2])
-                                client_connect.radio = sta_radio
-                                client_connect.build()
-                                result = client_connect.wait_for_ip(station_list=[sta_name], timeout_sec=240)
-                                self.get_station_data(sta_name=[sta_name], rows=sta_rows,
-                                                      allure_attach=True)
-                                if result:
-                                    logging.info("ip's acquired")
-                                    self.sta_mode_ = \
-                                        self.json_get(f'/port/{shelf}/{resource}/wlan{radio_num}?fields=mode')[
-                                            'interface'][
-                                            'mode']
-                                    logging.info("sta_mode_vht_160_enable:- " + str(self.sta_mode_))
-                                else:
-                                    logging.info("Stations Failed to get IP's")
-                                    pytest.fail("Stations Failed to get IP's")
-
+            station_data = self.client_connect(ssid=ssid_name, passkey=passkey, security=security, mode=mode, band=band,
+                                                num_sta=1, identifier=identifier,
+                                               client_type=client_type, dut_data=dut_data)
             wificapacity_obj = WiFiCapacityTest(lfclient_host=self.manager_ip,
                                                 lf_port=self.manager_http_port,
                                                 ssh_port=self.manager_ssh_port,
@@ -1307,7 +1187,7 @@ class lf_tests(lf_libs):
                                                 upload_rate=upload_rate,
                                                 download_rate=download_rate,
                                                 sort=sort,
-                                                stations=stations,
+                                                stations=list(station_data)[0],
                                                 create_stations=create_stations,
                                                 radio=None,
                                                 security=None,
