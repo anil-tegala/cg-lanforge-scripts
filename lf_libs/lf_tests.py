@@ -921,30 +921,29 @@ class lf_tests(lf_libs):
         for dut in self.dut_data:
             ssid_data = []
             identifier = dut["identifier"]
-            if r_val.keys().__contains__(identifier):
-                for idx_ in dut_data[identifier]["ssid_data"]:
-                    if str(dut_data[identifier]["ssid_data"][idx_]["encryption"]).upper() == "OPEN":
-                        ssid_data.append(
-                            ['ssid_idx=' + str(idx_) + ' ssid=' + dut_data[identifier]["ssid_data"][idx_]["ssid"]
-                             +
-                             ' bssid=' + str(dut_data[identifier]["ssid_data"][idx_]["bssid"]).upper()])
-                    else:
-                        ssid_data.append(
-                            ['ssid_idx=' + str(idx_) + ' ssid=' + dut_data[identifier]["ssid_data"][idx_]["ssid"] +
-                             ' security=' + str(dut_data[identifier]["ssid_data"][idx_]["encryption"]).upper() +
-                             ' password=' + dut_data[identifier]["ssid_data"][idx_]["password"] +
-                             ' bssid=' + str(dut_data[identifier]["ssid_data"][idx_]["bssid"]).upper()])
-                self.update_duts(identifier=identifier, ssid_data=ssid_data)
+            # if r_val.keys().__contains__(identifier):
+            for idx_ in dut_data[0]['ssid']["ssid_data"]:
+                if str(dut_data[0]['ssid']["ssid_data"][idx_]["encryption"]).upper() == "OPEN":
+                    ssid_data.append(
+                        ['ssid_idx=' + str(idx_) + ' ssid=' + dut_data[0]['ssid']["ssid_data"][idx_]["ssid"]
+                        ])
+                else:
+                    ssid_data.append(
+                        ['ssid_idx=' + str(idx_) + ' ssid=' + dut_data[0]['ssid']["ssid_data"][idx_]["ssid"] +
+                         ' security=' + str(dut_data[0]['ssid']["ssid_data"][idx_]["encryption"]).upper() +
+                         ' password=' + dut_data[0]['ssid']["ssid_data"][idx_]["password"]])
+            self.update_duts(identifier=identifier, ssid_data=ssid_data)
 
     def add_stations(self, band="2G", num_stations=9, ssid_name="", dut_data={}, identifier=None):
         dut_name = []
         # for index in range(0, len(self.dut_data)):
         #     dut_name.append(self.dut_data[index]["identifier"])
+        print("self.dut_dataaaa", self.dut_data)
         self.check_band_ap(band=band)
         if num_stations == 0:
             logging.warning("0 Stations")
             return
-        idx = None
+        idx = '0'
         r_val = dict()
         for dut in self.dut_data:
             r_val[dut["identifier"]] = None
@@ -953,18 +952,16 @@ class lf_tests(lf_libs):
             ssid_data = []
             identifier = dut["identifier"]
             if r_val.keys().__contains__(identifier):
-                for idx_ in dut_data[identifier]["ssid_data"]:
-                    if str(dut_data[identifier]["ssid_data"][idx_]["encryption"]).upper() == "OPEN":
+                for idx_ in dut_data[0]['ssid']["ssid_data"]:
+                    if str(dut_data[0]['ssid']["ssid_data"][idx_]["encryption"]).upper() == "OPEN":
                         ssid_data.append(
-                            ['ssid_idx=' + str(idx_) + ' ssid=' + dut_data[identifier]["ssid_data"][idx_]["ssid"]
-                             +
-                             ' bssid=' + str(dut_data[identifier]["ssid_data"][idx_]["bssid"]).upper()])
+                            ['ssid_idx=' + str(idx_) + ' ssid=' + dut_data[0]['ssid']["ssid_data"][idx_]["ssid"]
+                             ])
                     else:
                         ssid_data.append(
-                            ['ssid_idx=' + str(idx_) + ' ssid=' + dut_data[identifier]["ssid_data"][idx_]["ssid"] +
-                             ' security=' + str(dut_data[identifier]["ssid_data"][idx_]["encryption"]).upper() +
-                             ' password=' + dut_data[identifier]["ssid_data"][idx_]["password"] +
-                             ' bssid=' + str(dut_data[identifier]["ssid_data"][idx_]["bssid"]).upper()])
+                            ['ssid_idx=' + str(idx_) + ' ssid=' + dut_data[0]['ssid']["ssid_data"][idx_]["ssid"] +
+                             ' security=' + str(dut_data[0]['ssid']["ssid_data"][idx_]["encryption"]).upper() +
+                             ' password=' + dut_data[0]['ssid']["ssid_data"][idx_]["password"] ])
                 self.update_duts(identifier=identifier, ssid_data=ssid_data)
         dict_all_radios_2g = {"wave2_2g_radios": self.wave2_2g_radios,
                               "wave1_radios": self.wave1_radios, "mtk_radios": self.mtk_radios,
@@ -986,8 +983,8 @@ class lf_tests(lf_libs):
         sniff_radio = ""
 
         for dut in dut_data:
-            for idx_ in dut_data[dut]["ssid_data"]:
-                temp_band = dut_data[dut]["ssid_data"][idx_]["band"]
+            for idx_ in dut['ssid']["ssid_data"]:
+                temp_band = dut['ssid']["ssid_data"][idx_]["band"]
                 if band == "2G":
                     if temp_band.lower() == "twog":
                         temp_band = "2G"
@@ -997,9 +994,9 @@ class lf_tests(lf_libs):
                 elif band == "6G":
                     if temp_band.lower() == "sixg":
                         temp_band = "6G"
-                if band == temp_band and ssid_name == \
-                        dut_data[dut]["ssid_data"][idx_]["ssid"]:
-                    idx = idx_
+                # if band == temp_band and ssid_name == \
+                #         dut['ssid']["ssid_data"][idx_]["ssid"]:
+                #     idx = idx_
         if band == "2G":
             stations = None
             if num_stations != "max":
@@ -1252,7 +1249,30 @@ class lf_tests(lf_libs):
                     pytest.fail("Did not report traffic")
             if pass_fail_criteria:
                 if add_stations:
-                    if num_stations[self.band_sta] == 1:
+                    band_ =list(num_stations.keys())[0]
+                    radio_data = self.add_stations(band=band_, num_stations=num_stations[band_], ssid_name=ssid_name,
+                                                   dut_data=dut_data,
+                                                   identifier=identifier)
+                    if list(num_stations.values())[0] == 1:
+                        logging.info("radio_data: " + str(radio_data))
+                        sta_radio = list(radio_data.keys())[0]
+                        logging.info("sta_radio: " + str(sta_radio))
+                        sta_radio = sta_radio.split(".")
+                        shelf = int(sta_radio[0])
+                        resource = int(sta_radio[1])
+                        radio_ = sta_radio[2]
+                        radio_num = int(''.join(x for x in radio_ if x.isdigit()))
+                        if list(num_stations.keys())[0] == "2G":
+                            temp = '_2g'
+                        if list(num_stations.keys())[0] == "5G":
+                            temp = '_5g'
+                        sta_name = f"{shelf}.{resource}.wlan{temp}{radio_num}"
+                        logging.info("sta_name: " + str(sta_name))
+                        self.sta_mode_ = \
+                            self.json_get(f'/port/{shelf}/{resource}/wlan{temp}{radio_num}?fields=mode')['interface'][
+                                'mode']
+                        logging.info("sta_mode:- " + str(self.sta_mode_))
+                    if list(num_stations.values())[0] == 1:
                         current_directory = os.getcwd()
                         file_path = current_directory + "/e2e/basic/performance_tests/performance_pass_fail.json"
                         logging.info("performance_pass file config path:- " + str(file_path))
@@ -1274,7 +1294,7 @@ class lf_tests(lf_libs):
                             logging.error("AP model is not available in performance_pass_fail.json file")
                         logging.info(str(model) + " All Benchmark throughput:- " + str(pass_fail_values))
                         split_mode = self.sta_mode_.split(" ")
-                        key = f"{self.band_sta} {split_mode[2]} {split_mode[1]}MHz"
+                        key = f"{list(num_stations.keys())[0]} {split_mode[2]} {split_mode[1]}MHz"
                         logging.info("key:- " + str(key))
                         proto = None
                         if "TCP" in protocol:
