@@ -1291,7 +1291,11 @@ class lf_tests(lf_libs):
                         if model in all_pass_fail_data["AP Models"]:
                             pass_fail_values = all_pass_fail_data["AP Models"][model]
                         else:
-                            logging.error("AP model is not available in performance_pass_fail.json file")
+                            prev_model = next(key for key, val in all_pass_fail_data["AP Models"].items())
+                            all_pass_fail_data["AP Models"][model] = all_pass_fail_data["AP Models"][prev_model]
+                            with open(file_path, 'w') as json_file:
+                                json.dump(all_pass_fail_data, json_file, indent=4)
+                            # logging.error("AP model is not available in performance_pass_fail.json file")
                         logging.info(str(model) + " All Benchmark throughput:- " + str(pass_fail_values))
                         split_mode = self.sta_mode_.split(" ")
                         key = f"{list(num_stations.keys())[0]} {split_mode[2]} {split_mode[1]}MHz"
