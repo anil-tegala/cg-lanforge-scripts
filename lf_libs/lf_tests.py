@@ -1293,6 +1293,7 @@ class lf_tests(lf_libs):
                         else:
                             prev_model = next(key for key, val in all_pass_fail_data["AP Models"].items())
                             all_pass_fail_data["AP Models"][model] = all_pass_fail_data["AP Models"][prev_model]
+                            pass_fail_values = all_pass_fail_data["AP Models"][model]
                             with open(file_path, 'w') as json_file:
                                 json.dump(all_pass_fail_data, json_file, indent=4)
                             # logging.error("AP model is not available in performance_pass_fail.json file")
