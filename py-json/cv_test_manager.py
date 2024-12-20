@@ -338,6 +338,8 @@ class cv_test(Realm):
                 if dialog[0]["LAST"]["response"] != "NO-DIALOG":
                     logger.info("Popup Dialog:\n")
                     logger.info(dialog[0]["LAST"]["response"])
+                    if 'did not connect' in dialog[0]["LAST"]["response"] or "could not connect" in dialog[0]["LAST"]["response"]:
+                        return 'stations did not connect'
             except Exception as e:
                 logger.info(str(e))
 
@@ -393,6 +395,9 @@ class cv_test(Realm):
             if dialog[0]["LAST"]["response"] != "NO-DIALOG":
                 logger.info("Popup Dialog:\n")
                 logger.info(dialog[0]["LAST"]["response"])
+                if 'did not connect' in dialog[0]["LAST"]["response"] or "could not connect" in dialog[0]["LAST"][
+                    "response"]:
+                    return 'stations did not connect'
             else:
                 break
 
