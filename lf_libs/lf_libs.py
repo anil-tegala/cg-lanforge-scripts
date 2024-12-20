@@ -1360,11 +1360,17 @@ class lf_libs:
             else:
                 print("Provide proper option: download or upload")
                 return
+            csv_throughput_values = csv_throughput_values[0][0].split(',')
+            print("Throughput Values:", csv_throughput_values)
+            print("Station Names:", csv_sta_names)
 
-            sta_list = csv_sta_names[0][0][:-1].replace('"', '').split(",")
-            th_list = list(map(float, csv_throughput_values[0][0].split(",")))
-            for i in range(len(sta_list)):
-                dict_data[sta_list[i]] = th_list[i]
+            raw_sta_names = csv_sta_names[0][0].strip('"')
+            sta_list = raw_sta_names.split('","')
+            print("Processed Station List:", sta_list)
+
+            if len(sta_list) != len(csv_throughput_values):
+                raise ValueError("The number of station names and throughput values must match.")
+            dict_data = {sta_list[i]: csv_throughput_values[i] for i in range(len(sta_list))}
         return dict_data
 
     def attach_report_kpi(self, report_name=None, file_name="kpi_file"):
