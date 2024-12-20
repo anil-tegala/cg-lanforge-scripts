@@ -199,6 +199,8 @@ class ApAutoTest(cvtest):
                  pull_report=False,
                  dut5_0="NA",
                  dut2_0="NA",
+                 dut5_1="NA",
+                 dut2_1="NA",
                  load_old_cfg=False,
                  max_stations_2=100,
                  max_stations_5=100,
@@ -212,6 +214,7 @@ class ApAutoTest(cvtest):
                  sets=None,
                  graph_groups=None,
                  debug=False,
+                 verbosity='5'
                  ):
         super().__init__(lfclient_host=lf_host, lfclient_port=lf_port, debug_=debug)
 
@@ -233,12 +236,15 @@ class ApAutoTest(cvtest):
         self.lf_password = lf_password
         self.instance_name = instance_name
         self.config_name = config_name
+        self.verbosity = verbosity
         self.upstream = upstream
         self.pull_report = pull_report
         self.load_old_cfg = load_old_cfg
         self.test_name = "AP-Auto"
         self.dut5_0 = dut5_0
         self.dut2_0 = dut2_0
+        self.dut5_1 = dut5_1
+        self.dut2_1 = dut2_1
         self.max_stations_2 = max_stations_2
         self.max_stations_5 = max_stations_5
         self.max_stations_dual = max_stations_dual
@@ -273,12 +279,12 @@ class ApAutoTest(cvtest):
 
         ridx = 0
         for r in self.radio2:
-            cfg_options.append("radio2-%i: %s" % (ridx, r[0]))
+            cfg_options.append("radio2-%i: %s" % (ridx, r))
             ridx += 1
 
         ridx = 0
         for r in self.radio5:
-            cfg_options.append("radio5-%i: %s" % (ridx, r[0]))
+            cfg_options.append("radio5-%i: %s" % (ridx, r))
             ridx += 1
 
         self.apply_cfg_options(cfg_options, self.enables, self.disables, self.raw_lines, self.raw_lines_file)
@@ -286,10 +292,14 @@ class ApAutoTest(cvtest):
         # Command line args take precedence.
         if self.upstream:
             cfg_options.append("upstream_port: %s" % self.upstream)
-        if self.dut5_0 != "":
+        if self.dut5_0 != "NA":
             cfg_options.append("dut5-0: " + self.dut5_0)
-        if self.dut2_0 != "":
+        if self.dut2_0 != "NA":
             cfg_options.append("dut2-0: " + self.dut2_0)
+        if self.dut5_1 != "NA":
+            cfg_options.append("dut5-1: " + self.dut5_1)
+        if self.dut2_1 != "NA":
+            cfg_options.append("dut2-1: " + self.dut2_1)
         if self.max_stations_2 != -1:
             cfg_options.append("max_stations_2: " + str(self.max_stations_2))
         if self.max_stations_5 != -1:
@@ -301,12 +311,17 @@ class ApAutoTest(cvtest):
         self.build_cfg(self.config_name, blob_test, cfg_options)
 
         cv_cmds = []
-        self.create_and_run_test(self.load_old_cfg, self.test_name, self.instance_name,
+        cmd = "cv set '%s' 'VERBOSITY' '%s'" % (self.instance_name,self.verbosity)
+        cv_cmds.append(cmd)
+
+        logger.info("verbosity is : {verbosity}".format(verbosity=self.verbosity))
+        result = self.create_and_run_test(self.load_old_cfg, self.test_name, self.instance_name,
                                  self.config_name, self.sets,
                                  self.pull_report, self.lf_host, self.lf_user, self.lf_password,
                                  cv_cmds, ssh_port=self.ssh_port, local_lf_report_dir=self.local_lf_report_dir,
                                  graph_groups_file=self.graph_groups)
-
+        if result == 'stations did not connect':
+            return result
         self.rm_text_blob(self.config_name, blob_test)  # To delete old config with same name
 
 
