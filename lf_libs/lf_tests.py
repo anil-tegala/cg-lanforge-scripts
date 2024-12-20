@@ -1266,6 +1266,8 @@ class lf_tests(lf_libs):
                             temp = '_2g'
                         if list(num_stations.keys())[0] == "5G":
                             temp = '_5g'
+                        if list(num_stations.keys())[0] == "6G":
+                            temp = '_6g'
                         sta_name = f"{shelf}.{resource}.wlan{temp}{radio_num}"
                         logging.info("sta_name: " + str(sta_name))
                         self.sta_mode_ = \
