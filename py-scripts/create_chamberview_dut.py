@@ -120,7 +120,7 @@ class DUT(dut):
             for j in range(len(self.ssid)):
                 self.ssid[j] = shlex.split(self.ssid[j][0])
                 for k in range(len(self.ssid[j])):
-                    kvp = self.ssid[j][k].split('=')
+                    kvp = self.ssid[j][k].split('=',1)
                     # print("key -:%s:-  val -:%s:-" % (kvp[0], kvp[1]))
                     self.ssid[j][k] = kvp
 
