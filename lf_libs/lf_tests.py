@@ -2278,7 +2278,7 @@ class lf_tests(lf_libs):
         return rvr_obj, report_name
 
     def dual_band_performance_test(self, ssid_5G="[BLANK]", ssid_2G="[BLANK]", mode="BRIDGE", vlan_id=100,
-                                   dut_name="TIP",
+                                   dut_name="TIP",password_5g='',password_2g='',
                                    instance_name="test_demo", dut_5g="", dut_2g="", influx_tags="",
                                    move_to_influx=False,
                                    create_vlan=True, dut_data={}):
@@ -2296,40 +2296,75 @@ class lf_tests(lf_libs):
                         vlan_raw_lines = self.add_vlan(vlan_ids=vlan_id, build=True)
                     upstream_port = list(self.lanforge_data['wan_ports'].keys())[0] + "." + str(vlan_id[0])
             logging.info("Upstream data: " + str(upstream_port))
-
             self.update_dut_ssid(dut_data=dut_data)
-            self.dualbandptest_obj = ApAutoTest(lf_host=self.manager_ip,
-                                                lf_port=self.manager_http_port,
-                                                lf_user="lanforge",
-                                                lf_password="lanforge",
-                                                ssh_port=self.manager_ssh_port,
-                                                instance_name=instance_name,
-                                                config_name="dbp_config",
-                                                upstream=upstream_port,
-                                                pull_report=True,
-                                                dut5_0=dut_5g,
-                                                dut2_0=dut_2g,
-                                                load_old_cfg=False,
-                                                local_lf_report_dir=self.local_report_path,
-                                                max_stations_2=64,
-                                                max_stations_5=64,
-                                                max_stations_dual=124,
-                                                radio2=[self.wave2_2g_radios],
-                                                radio5=[self.wave2_5g_radios],
-                                                raw_lines=[['modes', 'AUTO']],
-                                                # test_tag=influx_tags,
-                                                sets=[['Basic Client Connectivity', '0'],
-                                                      ['Multi Band Performance', '1'],
-                                                      ['Throughput vs Pkt Size', '0'], ['Capacity', '0'],
-                                                      ['Skip 2.4Ghz Tests', '1'],
-                                                      ['Skip 5Ghz Tests', '1'],
-                                                      ['Stability', '0'],
-                                                      ['Band-Steering', '0'],
-                                                      ['Multi-Station Throughput vs Pkt Size', '0'],
-                                                      ['Long-Term', '0']]
-                                                )
+            if password_2g!="" and password_5g!="":
+                self.dualbandptest_obj = ApAutoTest(lf_host=self.manager_ip,
+                                                    lf_port=self.manager_http_port,
+                                                    lf_user="lanforge",
+                                                    lf_password="lanforge",
+                                                    ssh_port=self.manager_ssh_port,
+                                                    instance_name=instance_name,
+                                                    config_name="dbp_config",
+                                                    upstream=upstream_port,
+                                                    pull_report=True,
+                                                    dut5_1=dut_5g,
+                                                    dut2_1=dut_2g,
+                                                    load_old_cfg=False,
+                                                    local_lf_report_dir=self.local_report_path,
+                                                    max_stations_2=64,
+                                                    max_stations_5=64,
+                                                    max_stations_dual=1,
+                                                    radio2=['1.1.wiphy0'],
+                                                    radio5=['1.1.wiphy1'],
+                                                    raw_lines=[['modes', 'AUTO']],
+                                                    # test_tag=influx_tags,
+                                                    sets=[['Basic Client Connectivity', '0'],
+                                                          ['Multi Band Performance', '1'],
+                                                          ['Throughput vs Pkt Size', '0'], ['Capacity', '0'],
+                                                          ['Skip 2.4Ghz Tests', '1'],
+                                                          ['Skip 5Ghz Tests', '1'],
+                                                          ['Skip 6Ghz Tests', '1'],
+                                                          ['Stability', '0'],
+                                                          ['Band-Steering', '0'],
+                                                          ['Multi-Station Throughput vs Pkt Size', '0'],
+                                                          ['Long-Term', '0']]
+                                                    )
+            else:
+                self.dualbandptest_obj = ApAutoTest(lf_host=self.manager_ip,
+                                                    lf_port=self.manager_http_port,
+                                                    lf_user="lanforge",
+                                                    lf_password="lanforge",
+                                                    ssh_port=self.manager_ssh_port,
+                                                    instance_name=instance_name,
+                                                    config_name="dbp_config",
+                                                    upstream=upstream_port,
+                                                    pull_report=True,
+                                                    dut5_0=dut_5g,
+                                                    dut2_0=dut_2g,
+                                                    load_old_cfg=False,
+                                                    local_lf_report_dir=self.local_report_path,
+                                                    max_stations_2=64,
+                                                    max_stations_5=64,
+                                                    max_stations_dual=1,
+                                                    radio2=['1.1.wiphy0'],
+                                                    radio5=['1.1.wiphy1'],
+                                                    raw_lines=[['modes', 'AUTO']],
+                                                    # test_tag=influx_tags,
+                                                    sets=[['Basic Client Connectivity', '0'],
+                                                          ['Multi Band Performance', '1'],
+                                                          ['Throughput vs Pkt Size', '0'], ['Capacity', '0'],
+                                                          ['Skip 2.4Ghz Tests', '1'],
+                                                          ['Skip 5Ghz Tests', '1'],
+                                                          ['Skip 6Ghz Tests', '1'],
+                                                          ['Stability', '0'],
+                                                          ['Band-Steering', '0'],
+                                                          ['Multi-Station Throughput vs Pkt Size', '0'],
+                                                          ['Long-Term', '0']]
+                                                    )
             self.dualbandptest_obj.setup()
-            self.dualbandptest_obj.run()
+            result = self.dualbandptest_obj.run()
+            if result == 'stations did not connect':
+                pytest.fail("Could not connect all stations")
             if move_to_influx:
                 report_name = "../reports/" + \
                               self.dualbandptest_obj.report_name[0]['LAST']["response"].split(":::")[1].split("/")[-1]
@@ -2347,16 +2382,35 @@ class lf_tests(lf_libs):
                     pass
             report_name = self.dualbandptest_obj.report_name[0]['LAST']["response"].split(":::")[1].split("/")[-1] + "/"
             self.attach_report_graphs(report_name=report_name, pdf_name="Dual Band Performance Test")
-            result = self.read_kpi_file(column_name=["pass/fail"], dir_name=report_name)
+            result_status = self.read_kpi_file(column_name=["pass/fail"], dir_name=report_name)
+            result_score = self.read_kpi_file(column_name=["numeric-score"], dir_name=report_name)
             allure.attach.file(source="../reports/" + report_name + "/kpi.csv",
-                               name=f"dual_band_CSV", attachment_type="CSV")
-            # if result[0][0] == "PASS":
-            #     return True, "Test Passed"
-            # else:
-            #     return False, "Test Failed"
+                               name=f"dual_band_kpi.csv", attachment_type=allure.attachment_type.CSV)
+
+            file_name = "/csv-data/data-Throughput_for_different_bands-1.csv"
+            download_thpt_data = self.read_csv_individual_station_throughput(file_name=file_name, dir_name=report_name,option='download')
+            upload_thpt_data = self.read_csv_individual_station_throughput(file_name=file_name, dir_name=report_name,option='upload')
+
+            total_combined_a = float(download_thpt_data['Combined-2'])
+            total_combined_b = float(upload_thpt_data['Combined-2'])
+            total_dual_a = float(download_thpt_data['Dual'])
+            total_dual_b = float(upload_thpt_data['Dual'])
+
+            # Check if the dual throughput  is less than 90% of the corresponding combined throughput value
+            if (total_dual_a < 0.9 * total_combined_a) or ( total_dual_b < 0.9 * total_combined_b):
+                allure.attach(name="Combined throughput ",body=f"download throughput {total_combined_a} Mbps , upload throughput {total_combined_b} Mbps")
+                allure.attach(name="Dual band throughput ",
+                              body=f"download throughput {total_dual_a} Mbps , upload throughput {total_dual_b} Mbps")
+                pytest.fail(f"Dual concurrent throughput is not 90% of the sum of individual single-band throughputs.")
+            if result_status[0][0] == 'PASS' and int(result_score[0][0]) == 0:
+                allure.attach(name="Combined throughput ",body=f"download throughput {total_combined_a} Mbps , upload throughput {total_combined_b} Mbps")
+                allure.attach(name="Dual band throughput ",
+                              body=f"download throughput {total_dual_a} Mbps , upload throughput {total_dual_b} Mbps")
+                pytest.fail(f"Dual-band throughput test doesn't run")
+            # return result_status[0][0]
 
         except Exception as e:
-            logging.error(f"{e}")
+            logging.error(f"ERROR : {e}")
             return False, f"{e}"
         return self.dualbandptest_obj
 
