@@ -719,7 +719,7 @@ class lf_tests(lf_libs):
             logging.info("ALL Stations got IP as Expected")
 
     def client_connect(self, ssid="[BLANK]", passkey="[BLANK]", security="wpa2", mode="BRIDGE", band="twog",
-                       vlan_id=[None], num_sta=None, scan_ssid=True, client_type=0, pre_cleanup=True,
+                       vlan_id=[None], num_sta=None, scan_ssid=True, client_type=0, pre_cleanup=True,sta_flag=None,
                        station_data=["4way time (us)", "channel", "cx time (us)", "dhcp (ms)", "ip", "signal", "mode"],
                        allure_attach=True, identifier=None, allure_name="station data", dut_data={}):
         # pre cleanup
@@ -789,7 +789,8 @@ class lf_tests(lf_libs):
                                            _sta_list=data[identifier]["station_data"][radio],
                                            _password=data[identifier]["passkey"],
                                            _ssid=data[identifier]["ssid"],
-                                           _security=data[identifier]["encryption"])
+                                           _security=data[identifier]["encryption"],
+                                           _sta_flags=sta_flag)
             client_connect.station_profile.sta_mode = client_type
             client_connect.upstream_resource = data[identifier]["upstream_resource"]
             client_connect.upstream_port = data[identifier]["upstream"]
@@ -1133,7 +1134,7 @@ class lf_tests(lf_libs):
                       instance_name="wct_instance", download_rate="1Gbps", influx_tags="",security="",passkey="[BLANK]",
                       upload_rate="1Gbps", protocol="TCP-IPv4", duration="60000", stations="", create_stations=False,
                       sort="interleave", raw_lines=[], move_to_influx=False, dut_data={}, ssid_name=None,client_type=0,
-                      num_stations={}, add_stations=True, create_vlan=True, pass_fail_criteria=False):
+                      sta_flag=None,num_stations={}, add_stations=True, create_vlan=True, pass_fail_criteria=False):
         wificapacity_obj_list = []
         vlan_raw_lines = None
         for dut in self.dut_data:
@@ -1164,7 +1165,7 @@ class lf_tests(lf_libs):
                     upstream_port = ret[identifier] + "." + str(vlan_id[0])
             logging.info("Upstream data: " + str(upstream_port))
             station_data = self.client_connect(ssid=ssid_name, passkey=passkey, security=security, mode=mode, band=band,
-                                                num_sta=1, identifier=identifier,
+                                                num_sta=1, identifier=identifier,sta_flag=sta_flag,
                                                client_type=client_type, dut_data=dut_data)
             wificapacity_obj = WiFiCapacityTest(lfclient_host=self.manager_ip,
                                                 lf_port=self.manager_http_port,

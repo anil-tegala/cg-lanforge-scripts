@@ -55,6 +55,7 @@ class CreateStation(Realm):
                  _proxy_str=None,
                  _debug_on=False,
                  _up=True,
+                 _enable_ht160=False,
                  _set_txo_data=None,
                  _exit_on_error=False,
                  _exit_on_fail=False):
@@ -82,8 +83,12 @@ class CreateStation(Realm):
         self.station_profile.number_template_ = self.number_template
         self.station_profile.mode = self.mode
         if self.sta_flags is not None:
-            self.station_profile.desired_add_sta_flags = self.sta_flags
-            self.station_profile.desired_add_sta_mask = self.sta_flags
+            # self.station_profile.desired_add_sta_flags = self.sta_flags
+            # self.station_profile.desired_add_sta_mask = self.sta_flags
+            _flags = self.sta_flags.split(',')
+            for flags in _flags:
+                logger.info(f"Selected Flags: '{flags}'")
+                self.station_profile.set_command_flag("add_sta", flags, 1)
 
         if self.debug:
             print("----- Station List ----- ----- ----- ----- ----- ----- \n")
