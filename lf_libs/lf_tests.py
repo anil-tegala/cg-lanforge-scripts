@@ -1359,6 +1359,106 @@ class lf_tests(lf_libs):
 
         return wificapacity_obj_list
 
+    def multi_sta_thpt_test(self,raw_line=[['modes', 'AUTO']], ssid_5G="[BLANK]", ssid_2G="[BLANK]", mode="BRIDGE", vlan_id=100,
+                                   dut_name="TIP",password_5g='',password_2g='',
+                                   instance_name="test_demo", dut_5g="", dut_2g="", influx_tags="",
+                                   move_to_influx=False,
+                                   create_vlan=True, dut_data={}):
+        try:
+            instance_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
+
+            if mode == "BRIDGE" or mode == "NAT-WAN":
+                upstream_port = list(self.lanforge_data['wan_ports'].keys())[0]
+            if mode == "VLAN":
+                if vlan_id is None:
+                    logging.error("VLAN ID is Unspecified in the VLAN Case")
+                    pytest.skip("VLAN ID is Unspecified in the VLAN Case")
+                else:
+                    if create_vlan:
+                        vlan_raw_lines = self.add_vlan(vlan_ids=vlan_id, build=True)
+                    upstream_port = list(self.lanforge_data['wan_ports'].keys())[0] + "." + str(vlan_id[0])
+            logging.info("Upstream data: " + str(upstream_port))
+            self.update_dut_ssid(dut_data=dut_data)
+            self.multi_sta_obj = ApAutoTest(lf_host=self.manager_ip,
+                                                lf_port=self.manager_http_port,
+                                                lf_user="lanforge",
+                                                lf_password="lanforge",
+                                                ssh_port=self.manager_ssh_port,
+                                                instance_name=instance_name,
+                                                config_name="dbp_config",
+                                                upstream=upstream_port,
+                                                pull_report=True,
+                                                dut5_1=dut_5g,
+                                                dut2_1=dut_2g,
+                                                load_old_cfg=False,
+                                                local_lf_report_dir=self.local_report_path,
+                                                # max_stations_2=64,
+                                                # max_stations_5=64,
+                                                # max_stations_dual=1,
+                                                radio2=['1.1.wiphy0'],
+                                                radio5=['1.1.wiphy1'],
+                                                raw_lines=raw_line,
+                                                # test_tag=influx_tags,
+                                                sets=[['Basic Client Connectivity', '0'],
+                                                      ['Multi Band Performance', '0'],
+                                                      ['Throughput vs Pkt Size', '0'], ['Capacity', '0'],
+                                                      ['Stability', '0'],
+                                                      ['Band-Steering', '0'],
+                                                      ['Multi-Station Throughput vs Pkt Size', '1'],
+                                                      ['Long-Term', '0']]
+                                                )
+
+            result = self.multi_sta_obj.run()
+            if result == 'stations did not connect':
+                pytest.fail("Could not connect all stations")
+            if move_to_influx:
+                report_name = "../reports/" + \
+                              self.multi_sta_obj.report_name[0]['LAST']["response"].split(":::")[1].split("/")[-1]
+                try:
+                    influx = CSVtoInflux(influx_host=self.influx_params["influx_host"],
+                                         influx_port=self.influx_params["influx_port"],
+                                         influx_org=self.influx_params["influx_org"],
+                                         influx_token=self.influx_params["influx_token"],
+                                         influx_bucket=self.influx_params["influx_bucket"],
+                                         path=report_name)
+
+                    influx.glob()
+                except Exception as e:
+                    print(e)
+                    pass
+            report_name = self.multi_sta_obj.report_name[0]['LAST']["response"].split(":::")[1].split("/")[-1] + "/"
+            self.attach_report_graphs(report_name=report_name, pdf_name="Multi-Station Throughput Test")
+            result_status = self.read_kpi_file(column_name=["pass/fail"], dir_name=report_name)
+            result_score = self.read_kpi_file(column_name=["numeric-score"], dir_name=report_name)
+            allure.attach.file(source="../reports/" + report_name + "/kpi.csv",
+                               name=f"Multi_sta_thpt_kpi.csv", attachment_type=allure.attachment_type.CSV)
+
+            # file_name = "/csv-data/data-Throughput_for_different_bands-1.csv"
+            # download_thpt_data = self.read_csv_individual_station_throughput(file_name=file_name, dir_name=report_name,option='download')
+            # upload_thpt_data = self.read_csv_individual_station_throughput(file_name=file_name, dir_name=report_name,option='upload')
+            #
+            # total_combined_a = float(download_thpt_data['Combined-2'])
+            # total_combined_b = float(upload_thpt_data['Combined-2'])
+            # total_dual_a = float(download_thpt_data['Dual'])
+            # total_dual_b = float(upload_thpt_data['Dual'])
+            #
+            # # Check if the dual throughput  is less than 90% of the corresponding combined throughput value
+            # if (total_dual_a < 0.9 * total_combined_a) or ( total_dual_b < 0.9 * total_combined_b):
+            #     allure.attach(name="Combined throughput ",body=f"download throughput {total_combined_a} Mbps , upload throughput {total_combined_b} Mbps")
+            #     allure.attach(name="Dual band throughput ",
+            #                   body=f"download throughput {total_dual_a} Mbps , upload throughput {total_dual_b} Mbps")
+            #     pytest.fail(f"Dual concurrent throughput is not 90% of the sum of individual single-band throughputs.")
+            # if result_status[0][0] == 'PASS' and int(result_score[0][0]) == 0:
+            #     allure.attach(name="Combined throughput ",body=f"download throughput {total_combined_a} Mbps , upload throughput {total_combined_b} Mbps")
+            #     allure.attach(name="Dual band throughput ",
+            #                   body=f"download throughput {total_dual_a} Mbps , upload throughput {total_dual_b} Mbps")
+            #     pytest.fail(f"Multi_station throughput test doesn't run")
+            # return result_status[0][0]
+
+        except Exception as e:
+            logging.error(f"ERROR : {e}")
+            return False, f"{e}"
+
     def dataplane_throughput_test(self, ssid="[BLANK]", passkey="[BLANK]", security="wpa2", num_sta=1, mode="BRIDGE",
                                   vlan_id=[None],
                                   download_rate="100%", band="twog", scan_ssid=True,
