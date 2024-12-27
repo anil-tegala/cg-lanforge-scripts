@@ -1464,7 +1464,7 @@ class lf_tests(lf_libs):
                                   download_rate="100%", band="twog", scan_ssid=True,
                                   upload_rate="0kbps", duration="15s", instance_name="test_dataplane", raw_lines=None,
                                   influx_tags="",
-                                  move_to_influx=False,
+                                  move_to_influx=False, pass_fail_criteria=False,
                                   allure_attach=True, allure_name="station data", client_type=0, dut_data={}):
         instance_name = ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
         dataplane_obj_list = []
@@ -1549,7 +1549,97 @@ class lf_tests(lf_libs):
                     pass
             report_name = dataplane_obj.report_name[0]['LAST']["response"].split(":::")[1].split("/")[-1] + "/"
             self.attach_report_graphs(report_name=report_name, pdf_name="Dataplane Throughput Test - TCP-UDP 5G")
+            logging.info("report_name: " + str(report_name))
             self.attach_report_kpi(report_name=report_name)
+
+            if pass_fail_criteria:
+                numeric_score = self.read_kpi_file(column_name=["numeric-score"], dir_name=report_name)
+                logging.info("Numeric-score: " + str(numeric_score))
+                sta_info = (list(station_data)[0]).split('.')
+                self.sta_mode_ = \
+                    self.json_get(f'/port/{sta_info[0]}/{sta_info[1]}/{sta_info[2]}?fields=mode')['interface'][
+                        'mode']
+                split_mode = self.sta_mode_.split(" ")
+                nss = ((raw_lines[4][0]).split(':')[1]).strip()
+                if nss not in split_mode[2]:
+                    logging.info(f"Stations did not Run traffic.")
+                    pytest.fail(
+                        f"Stations did not Run traffic, client supports maximum {split_mode[2]} spatial streams")
+                current_directory = os.getcwd()
+                file_path = current_directory + "/e2e/basic/performance_tests/performance_pass_fail.json"
+                logging.info("performance_pass file config path:- " + str(file_path))
+                with open(file_path, 'r') as file:
+                    json_string = file.read()
+                    all_pass_fail_data = json.loads(json_string)
+                logging.info("All Testbed pass fail data:- " + str(all_pass_fail_data))
+                try:
+                    json_object = json.dumps(all_pass_fail_data)
+                except ValueError as e:
+                    logging.info("Performance Pass/Fail data is invalid")
+                    pytest.fail("Performance Pass/Fail data is invalid")
+                logging.info("DUT Data: " + str(dut_data))
+                model = self.dut_data[0]["model"]
+                if model in all_pass_fail_data["AP Models"]:
+                    pass_fail_values = all_pass_fail_data["AP Models"][model]
+                else:
+                    prev_model = next(key for key, val in all_pass_fail_data["AP Models"].items())
+                    all_pass_fail_data["AP Models"][model] = all_pass_fail_data["AP Models"][prev_model]
+                    pass_fail_values = all_pass_fail_data["AP Models"][model]
+                    with open(file_path, 'w') as json_file:
+                        json.dump(all_pass_fail_data, json_file, indent=4)
+                    # logging.error("AP model is not available in performance_pass_fail.json file")
+                logging.info(str(model) + " All Benchmark throughput:- " + str(pass_fail_values))
+                if band == "twog":
+                    temp = "2G"
+                if band == "fiveg":
+                    temp = "5G"
+                if band == "sixg":
+                    temp = "6G"
+                key = f"{temp} {split_mode[2]} {split_mode[1]}MHz"
+                logging.info("key:- " + str(key))
+                proto = None
+                if "TCP" in raw_lines[2][0]:
+                    proto = "TCP"
+                else:
+                    proto = "UDP"
+                logging.info("Proto:- " + str(proto))
+                pass_fail_value = pass_fail_values[key][proto]
+                if ("Transmit" in raw_lines[1][0]) and ("Receive" not in raw_lines[2][0]):
+                    logging.info("Benchmark throughput:- " + str(pass_fail_value) + "+")
+                    allure.attach(name="Benchmark throughput: ",
+                                  body=str(pass_fail_value) + "+ Mbps")
+                    actual_tht = int(numeric_score[0][0])
+                    logging.info("Actual throughput:- " + str(actual_tht))
+                    allure.attach(name="Actual throughput: ",
+                                  body=str(actual_tht) + " Mbps")
+                    if actual_tht < pass_fail_value:
+                        pytest.fail(
+                            f"Benchmark throughput:- {pass_fail_value}+ Mbps, Actual throughput:- {actual_tht} Mbps")
+                elif("Receive" in raw_lines[2][0]) and ("Transmit" not in raw_lines[1][0]):
+                    # Pass fail logic for Download. validating upload rate because providing some value during download
+                    logging.info("Benchmark throughput:- " + str(pass_fail_value) + "+")
+                    allure.attach(name="Benchmark throughput: ",
+                                  body=str(pass_fail_value) + "+ Mbps")
+                    actual_tht = int(numeric_score[0][0])
+                    logging.info("Actual throughput:- " + str(actual_tht))
+                    allure.attach(name="Actual throughput: ",
+                                  body=str(actual_tht) + " Mbps")
+                    if actual_tht < pass_fail_value:
+                        pytest.fail(
+                            f"Benchmark throughput:- {pass_fail_value}+ Mbps, Actual throughput:- {actual_tht} Mbps")
+                else:
+                    # Pass fail logic for bidirectional
+                    pass_fail_value = pass_fail_value * 2
+                    logging.info("Benchmark throughput:- " + str(pass_fail_value) + "+")
+                    allure.attach(name="Benchmark throughput: ",
+                                  body=str(pass_fail_value) + "+ Mbps")
+                    actual_tht = int(numeric_score[2][0])
+                    logging.info("Actual throughput:- " + str(actual_tht))
+                    allure.attach(name="Actual throughput: ",
+                                  body=str(actual_tht) + " Mbps")
+                    if actual_tht < pass_fail_value:
+                        pytest.fail(
+                            f"Benchmark throughput:- {pass_fail_value}+ Mbps, Actual throughput:- {actual_tht} Mbps")
             logging.info("Test Completed... Cleaning up Stations")
             self.client_disconnect(station_name=list(station_data.keys()))
             dataplane_obj_list.append(dataplane_obj)
