@@ -1553,8 +1553,6 @@ class lf_tests(lf_libs):
             self.attach_report_kpi(report_name=report_name)
 
             if pass_fail_criteria:
-                numeric_score = self.read_kpi_file(column_name=["numeric-score"], dir_name=report_name)
-                logging.info("Numeric-score: " + str(numeric_score))
                 sta_info = (list(station_data)[0]).split('.')
                 self.sta_mode_ = \
                     self.json_get(f'/port/{sta_info[0]}/{sta_info[1]}/{sta_info[2]}?fields=mode')['interface'][
@@ -1565,6 +1563,11 @@ class lf_tests(lf_libs):
                     logging.info(f"Stations did not Run traffic.")
                     pytest.fail(
                         f"Stations did not Run traffic, client supports maximum {split_mode[2]} spatial streams")
+                numeric_score = self.read_kpi_file(column_name=["numeric-score"], dir_name=report_name)
+                if numeric_score == "empty":
+                    pytest.fail(f"Stations did not Run traffic, CSV report not generated")
+                logging.info("Numeric-score: " + str(numeric_score))
+                num_rows = len(numeric_score)
                 current_directory = os.getcwd()
                 file_path = current_directory + "/e2e/basic/performance_tests/performance_pass_fail.json"
                 logging.info("performance_pass file config path:- " + str(file_path))
@@ -1604,7 +1607,8 @@ class lf_tests(lf_libs):
                     proto = "UDP"
                 logging.info("Proto:- " + str(proto))
                 pass_fail_value = pass_fail_values[key][proto]
-                if ("Transmit" in raw_lines[1][0]) and ("Receive" not in raw_lines[2][0]):
+                logging.info("All Testbed pass fail data:- " + str(all_pass_fail_data))
+                if ("Transmit" in raw_lines[1][0]) and ("Receive" not in raw_lines[1][0]) and (num_rows < 2):
                     logging.info("Benchmark throughput:- " + str(pass_fail_value) + "+")
                     allure.attach(name="Benchmark throughput: ",
                                   body=str(pass_fail_value) + "+ Mbps")
@@ -1615,7 +1619,7 @@ class lf_tests(lf_libs):
                     if actual_tht < pass_fail_value:
                         pytest.fail(
                             f"Benchmark throughput:- {pass_fail_value}+ Mbps, Actual throughput:- {actual_tht} Mbps")
-                elif("Receive" in raw_lines[2][0]) and ("Transmit" not in raw_lines[1][0]):
+                elif("Receive" in raw_lines[1][0]) and ("Transmit" not in raw_lines[1][0]) and (num_rows < 2):
                     # Pass fail logic for Download. validating upload rate because providing some value during download
                     logging.info("Benchmark throughput:- " + str(pass_fail_value) + "+")
                     allure.attach(name="Benchmark throughput: ",
@@ -1633,7 +1637,10 @@ class lf_tests(lf_libs):
                     logging.info("Benchmark throughput:- " + str(pass_fail_value) + "+")
                     allure.attach(name="Benchmark throughput: ",
                                   body=str(pass_fail_value) + "+ Mbps")
-                    actual_tht = int(numeric_score[2][0])
+                    if num_rows == 2:
+                        actual_tht = int(numeric_score[0][0]) + int(numeric_score[1][0])
+                    else:
+                        actual_tht = int(numeric_score[0][0])
                     logging.info("Actual throughput:- " + str(actual_tht))
                     allure.attach(name="Actual throughput: ",
                                   body=str(actual_tht) + " Mbps")
