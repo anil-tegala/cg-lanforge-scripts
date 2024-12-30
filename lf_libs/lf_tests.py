@@ -1462,7 +1462,7 @@ class lf_tests(lf_libs):
     def dataplane_throughput_test(self, ssid="[BLANK]", passkey="[BLANK]", security="wpa2", num_sta=1, mode="BRIDGE",
                                   vlan_id=[None],
                                   download_rate="100%", band="twog", scan_ssid=True,
-                                  upload_rate="0kbps", duration="15s", instance_name="test_dataplane", raw_lines=None,
+                                  upload_rate="0kbps", duration="1m", instance_name="test_dataplane", raw_lines=None,
                                   influx_tags="",
                                   move_to_influx=False, pass_fail_criteria=False,
                                   allure_attach=True, allure_name="station data", client_type=0, dut_data={}):
