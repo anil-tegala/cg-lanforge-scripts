@@ -696,13 +696,13 @@ class lf_libs:
                     r_val[dut["identifier"]]["bssid"] = bssid
                     r_val[dut["identifier"]]["channel"] = channel
                     if str(encryption).upper() == "OPEN":
-                        ssid_data.append(['ssid_idx=0 ssid=' + ssid +
-                                          ' bssid=' + str(bssid).upper()])
+                        ssid_data.append(['ssid_idx=0 ssid=' + ssid])
+                                          # ' bssid=' + str(bssid).upper()
                     else:
                         ssid_data.append(['ssid_idx=0 ssid=' + ssid +
                                           ' security=' + str(encryption).upper() +
-                                          ' password=' + passkey +
-                                          ' bssid=' + str(bssid).upper()])
+                                          ' password=' + passkey])
+                                          # ' bssid=' + str(bssid).upper()])
 
                     if str(encryption).upper() in ["OPEN", "WPA", "WPA2", "WPA3", "WEP"]:
                         self.update_duts(identifier=dut["identifier"], ssid_data=ssid_data)
