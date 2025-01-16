@@ -339,6 +339,7 @@ class cv_test(Realm):
                     logger.info("Popup Dialog:\n")
                     logger.info(dialog[0]["LAST"]["response"])
                     if 'did not connect' in dialog[0]["LAST"]["response"] or "could not connect" in dialog[0]["LAST"]["response"]:
+                        self.delete_instance(instance_name)
                         return 'stations did not connect'
             except Exception as e:
                 logger.info(str(e))
@@ -397,6 +398,7 @@ class cv_test(Realm):
                 logger.info(dialog[0]["LAST"]["response"])
                 if 'did not connect' in dialog[0]["LAST"]["response"] or "could not connect" in dialog[0]["LAST"][
                     "response"]:
+                    self.delete_instance(instance_name)
                     return 'stations did not connect'
             else:
                 break
