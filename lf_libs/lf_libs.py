@@ -107,6 +107,12 @@ class lf_libs:
     """
     resources = None
 
+    # """
+    # 6e radio - supports (2.4GHz, 5gHz and 6gHz Band)
+    # Maximum 4 Station per radio
+    # """
+    # mt7925e_radios = []
+
     """
     ax radio - supports (2.4G and 5gHz Band)
     Maximum 1 Station per radio
@@ -259,6 +265,7 @@ class lf_libs:
         self.max_6g_stations = 0
         self.max_ax_stations = 0
         self.max_ac_stations = 0
+        # self.max_be_stations = 0
         phantom_radios = []
         for info in data:
             if info == "handler" or info == "uri" or info == "warnings":
@@ -269,6 +276,13 @@ class lf_libs:
                 phantom_radios.append(str(data[info]["entity id"]))
                 logging.error("Radio is in phantom state: " + str(data[info]["entity id"]) +
                               " ,Please Contact: support@candelatech.com")
+            # if str(data[info]["driver"]).__contains__("mt7925e"):
+            #     self.max_possible_stations += 4
+            #     self.max_2g_stations += 4 * int(str(data[info]["max_vifs"]))
+            #     self.max_5g_stations += 4 * int(str(data[info]["max_vifs"]))
+            #     self.max_6g_stations += 4 * int(str(data[info]["max_vifs"]))
+            #     self.max_be_stations += 4 * int(str(data[info]["max_vifs"]))
+            #     self.mt7925e_radios.append(info)
             if str(data[info]["driver"]).__contains__("BE200"):
                 self.max_possible_stations += 1
                 self.max_2g_stations += 1 * int(str(data[info]["max_vifs"]))
@@ -510,21 +524,29 @@ class lf_libs:
                         r_val[dut]["upstream"] = upstream
                     else:
                         r_val.pop(dut)
-        dict_all_radios_2g = {"wave2_2g_radios": self.wave2_2g_radios,
-                              "wave1_radios": self.wave1_radios, "mtk_radios": self.mtk_radios,
-                              "ax200_radios": self.ax200_radios,
+        dict_all_radios_2g = {
+                              # "mt7925e_radios":self.mt7925e_radios,
                               "be200_radios": self.be200_radios,
-                              "ax210_radios": self.ax210_radios
+                              "mtk_radios": self.mtk_radios,
+                              "ax210_radios": self.ax210_radios,
+                              "wave2_2g_radios": self.wave2_2g_radios,
+                              "wave1_radios": self.wave1_radios,
+                              "ax200_radios": self.ax200_radios
                               }
 
-        dict_all_radios_5g = {"wave2_5g_radios": self.wave2_5g_radios,
-                              "wave1_radios": self.wave1_radios, "mtk_radios": self.mtk_radios,
-                              "ax200_radios": self.ax200_radios,
+        dict_all_radios_5g = {
+                              # "mt7925e_radios":self.mt7925e_radios,
                               "be200_radios": self.be200_radios,
-                              "ax210_radios": self.ax210_radios
+                              "mtk_radios": self.mtk_radios,
+                              "ax210_radios": self.ax210_radios,
+                              "wave2_5g_radios": self.wave2_5g_radios,
+                              "wave1_radios": self.wave1_radios,
+                              "ax200_radios": self.ax200_radios
                               }
 
-        dict_all_radios_6g = {"be200_radios": self.be200_radios,
+        dict_all_radios_6g = {
+                              # "mt7925e_radios":self.mt7925e_radios,
+                              "be200_radios": self.be200_radios,
                               "ax210_radios": self.ax210_radios}
 
         max_station_per_radio = {"wave2_2g_radios": 64, "wave2_5g_radios": 64, "wave1_radios": 64, "mtk_radios": 19,
