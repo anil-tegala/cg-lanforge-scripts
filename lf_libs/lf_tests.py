@@ -905,11 +905,11 @@ class lf_tests(lf_libs):
                 table_dict["Pass/Fail"] = pass_fail
             logging.info("dfs_table_data: " + str(table_dict))
             self.attach_table_allure(data=table_dict, allure_name="Pass_Fail Table")
-            manager_ip = get_testbed_details["traffic_generator"]["details"]["manager_ip"]
-            manager_port = get_testbed_details["traffic_generator"]["details"]["ssh_port"]
-            serial_port = get_testbed_details["device_under_tests"][0]["serial_tty"]
-            reboot_logs = cg_1x_obj.reboot(manager_ip = manager_ip, manager_port = manager_port,serial_port=serial_port,idx=self.dut_data.index(dut))
-            allure.attach(name="Reboot Logs",body=str(reboot_logs))
+            # manager_ip = get_testbed_details["traffic_generator"]["details"]["manager_ip"]
+            # manager_port = get_testbed_details["traffic_generator"]["details"]["ssh_port"]
+            # serial_port = get_testbed_details["device_under_tests"][0]["serial_tty"]
+            # reboot_logs = cg_1x_obj.reboot(manager_ip = manager_ip, manager_port = manager_port,serial_port=serial_port,idx=self.dut_data.index(dut))
+            # allure.attach(name="Reboot Logs",body=str(reboot_logs))
             # time.sleep(180)
             # if sta_channel_before_dfs != sta_channel_after_dfs and str(sta_channel_after_dfs) != "-1":
             #     logging.info("channel after dfs: " + str(sta_channel_after_dfs))
